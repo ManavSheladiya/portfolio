@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MANAV SHELADIYA | CREATIVE STRATEGIST</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollToPlugin.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;600&family=Oswald:wght@300;500;700&display=swap');
+
+        :root {
+            --bg-color: #050505;
+            --text-main: #ffffff;
+            --border: #222222;
+        }
+
+        @media (min-width: 1024px) {
+            * { cursor: none !important; }
+        }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Manrope', sans-serif;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        h1, h2, h3, .brand-font {
+            font-family: 'Oswald', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: -0.02em;
+        }
+
+        /* --- GLOBAL BACKGROUND ANIMATION CANVAS --- */
+        #bgCanvas {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            z-index: -1;
+            pointer-events: none;
+            background: radial-gradient(circle at 50% 50%, #0a0a0a 0%, #050505 100%);
+            will-change: transform;
+            transform: translateZ(0);
+        }
+
+        /* --- GLASS CURSOR --- */
+        #cursor {
+            position: fixed;
+            top: 0; left: 0;
+            width: 20px; height: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            transform: translate(-50%, -50%);
+            transition: width 0.5s cubic-bezier(0.19, 1, 0.22, 1), 
+                        height 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+            display: none;
+        }
+        @media (min-width: 1024px) { #cursor { display: block; } }
+
+        /* --- MASONRY SHELF --- */
+        .shelf-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            grid-auto-rows: 200px;
+            grid-auto-flow: dense;
+            gap: 15px;
+            overflow: visible;
+        }
+
+        @media (min-width: 768px) {
+            .shelf-grid {
+                grid-template-columns: repeat(4, 1fr);
+                grid-auto-rows: 250px;
+                gap: 20px;
+            }
+        }
+
+        .shelf-item {
+            position: relative;
+            background: #111;
+            filter: grayscale(100%) brightness(0.6);
+            transition: filter 0.6s ease, transform 0.6s cubic-bezier(0.19, 1, 0.22, 1), opacity 0.6s ease;
+            z-index: 1;
+            border-radius: 4px;
+            overflow: hidden;
+            cursor: pointer;
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.05);
+        }
+
+        .shelf-item.hidden-shard {
+            display: none;
+            opacity: 0;
+            transform: scale(0.6) translateY(40px);
+        }
+
+        .shelf-item.size-s { grid-column: span 1; grid-row: span 1; }
+        .shelf-item.size-m { grid-column: span 2; grid-row: span 1; }
+        .shelf-item.size-l { grid-column: span 2; grid-row: span 2; }
+        .shelf-item.size-t { grid-column: span 1; grid-row: span 2; }
+
+        .shelf-item img {
+            width: 100%; height: 100%;
+            object-fit: cover;
+            object-position: center;
+            transform: scale(1.01);
+            transition: transform 1.2s cubic-bezier(0.19, 1, 0.22, 1);
+            display: block;
+        }
+
+        .shelf-item:hover {
+            filter: grayscale(0%) brightness(1);
+            z-index: 50;
+            transform: scale(1.1) !important;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.9);
+        }
+
+        .shelf-item:hover img { transform: scale(1.1); }
+
+        .shelf-grid:hover .shelf-item:not(:hover) {
+            opacity: 0.2;
+            filter: grayscale(100%) brightness(0.1) blur(3px);
+        }
+
+        /* --- EXPERIENCE ROW --- */
+        .exp-row {
+            transition: all 0.6s cubic-bezier(0.19, 1, 0.22, 1);
+            position: relative;
+            overflow: hidden;
+            background: rgba(0,0,0,0.2);
+            backdrop-filter: blur(5px);
+        }
+
+        .exp-details {
+            display: grid;
+            grid-template-rows: 0fr;
+            transition: grid-template-rows 0.6s cubic-bezier(0.19, 1, 0.22, 1), opacity 0.4s ease;
+            opacity: 0;
+        }
+
+        .exp-row:hover {
+            background: rgba(255,255,255,0.06);
+            padding-left: 2rem;
+            padding-right: 2rem;
+        }
+
+        .exp-row:hover .exp-details {
+            grid-template-rows: 1fr;
+            opacity: 1;
+            padding-top: 1.5rem;
+            padding-bottom: 2rem;
+        }
+
+        .exp-indicator { transition: transform 0.6s cubic-bezier(0.19, 1, 0.22, 1); }
+        .exp-row:hover .exp-indicator { transform: rotate(45deg); }
+
+        /* --- UI ELEMENTS --- */
+        .scramble-letter { display: inline-block; min-width: 0.5em; will-change: contents; }
+
+        #strategistText {
+            padding-left: 20px;
+            padding-right: 20px;
+            display: inline-block;
+        }
+
+        #loader {
+            position: fixed; inset: 0;
+            background: black; z-index: 10000;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        .marquee-wrapper {
+            overflow: hidden;
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+            padding: 4rem 0;
+            background: transparent;
+        }
+        .marquee-content {
+            display: flex; width: max-content;
+            animation: scroll-left 40s linear infinite;
+        }
+        .marquee-item {
+            font-family: 'Oswald', sans-serif;
+            font-size: 8vw;
+            font-weight: 700;
+            margin-right: 6rem;
+            color: transparent;
+            -webkit-text-stroke: 1px rgba(255,255,255,0.3);
+        }
+        @keyframes scroll-left { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+
+        .btn-view-more {
+            margin-top: 3rem;
+            padding: 1rem 3rem;
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            font-family: 'Oswald', sans-serif;
+            letter-spacing: 0.3em;
+            font-size: 0.75rem;
+            transition: all 0.4s ease;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(10px);
+        }
+        .btn-view-more:hover {
+            background: white;
+            color: black;
+            letter-spacing: 0.5em;
+        }
+
+        section { position: relative; z-index: 1; }
+    </style>
+</head>
+<body class="bg-[#050505]">
+
+    <div id="loader">
+        <div class="brand-font text-2xl tracking-[0.5em] animate-pulse">LOADING</div>
+    </div>
+
+    <canvas id="bgCanvas"></canvas>
+    <div id="cursor"></div>
+
+    <nav id="mainNav" class="fixed top-0 w-full z-50 py-6 transition-all duration-500">
+        <div class="px-6 md:px-12 flex justify-between items-center">
+            <div class="flex items-center gap-4">
+                <div class="w-10 h-10 rounded-full border border-white/20 overflow-hidden grayscale hover:grayscale-0 transition-all duration-500">
+                    <img src="images\profile.png" alt="Manav" class="w-full h-full object-cover">
+                </div>
+                <button onclick="restartHomeAnimation()" class="nav-link brand-font text-lg font-bold tracking-[0.3em] text-white outline-none">MANAV SHELADIYA</button>
+            </div>
+            <div class="hidden md:flex gap-12 text-[10px] tracking-[0.4em] font-medium text-white/60">
+                <a href="#work" class="nav-link hover:text-white">WORK</a>
+                <a href="#experience" class="nav-link hover:text-white">HISTORY</a>
+                <a href="#contact" class="nav-link hover:text-white">CONTACT</a>
+            </div>
+        </div>
+    </nav>
+
+    <header id="home" class="relative h-screen flex flex-col justify-center items-center text-center overflow-visible">
+        <div class="absolute inset-0 opacity-20 scale-110 pointer-events-none">
+            <video autoplay loop muted playsinline class="w-full h-full object-cover">
+                <source src="https://assets.mixkit.co/videos/preview/mixkit-liquid-bubbles-in-the-water-with-red-light-4512-large.mp4" type="video/mp4">
+            </video>
+        </div>
+        
+        <div class="mb-4 overflow-hidden relative z-10">
+            <p id="heroName" class="text-xs md:text-sm tracking-[0.8em] font-light text-zinc-500 opacity-0 transform translate-y-full">MANAV SHELADIYA</p>
+        </div>
+
+        <div class="z-10 px-6 relative">
+            <div class="overflow-visible mb-2">
+                <h1 class="text-[18vw] md:text-[12vw] leading-[0.85] font-bold hero-reveal">CREATIVE</h1>
+            </div>
+            <div class="overflow-visible">
+                <h1 id="strategistText" class="text-[18vw] md:text-[12vw] leading-[0.85] font-light italic opacity-80">STRATEGIST</h1>
+            </div>
+        </div>
+    </header>
+
+    <section id="work" class="py-32 bg-transparent">
+        <div class="px-6 md:px-12 mb-20 flex flex-col md:flex-row items-end justify-between">
+            <div>
+                <h2 class="text-7xl md:text-9xl font-bold tracking-tighter">THE SHELF</h2>
+                <p class="text-[11px] tracking-[0.6em] text-zinc-500 uppercase mt-4">Curated shards</p>
+            </div>
+        </div>
+        
+        <div class="px-6 md:px-12 flex flex-col items-center">
+            <div class="shelf-grid w-full" id="shelfGrid"></div>
+            <button id="viewMoreBtn" class="btn-view-more uppercase">Reveal All Shards</button>
+        </div>
+    </section>
+
+    <section id="experience" class="py-32 bg-transparent px-6 md:px-12">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-24 gap-8">
+            <h2 class="text-7xl md:text-9xl font-bold tracking-tighter">HISTORY</h2>
+            <p class="text-[10px] tracking-[0.5em] text-zinc-500 uppercase max-w-xs leading-relaxed">An evolution of craft from visual design to integrated creative strategy.</p>
+        </div>
+
+        <div class="border-t border-zinc-800">
+            <!-- Experience Row 1 -->
+            <div class="exp-row border-b border-zinc-800 cursor-pointer group">
+                <div class="py-12 grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
+                    <div class="md:col-span-3 text-[12px] tracking-[0.3em] text-zinc-500 brand-font">JAN 2025 — OCT 2025</div>
+                    <div class="md:col-span-5">
+                        <h3 class="text-4xl md:text-5xl font-bold mb-1 group-hover:text-blue-500 transition-colors duration-500">CANDY CLICKZ</h3>
+                        <p class="brand-font text-zinc-400 tracking-[0.2em] text-sm">CONTENT WRITER & CREATIVE STRATEGIST</p>
+                    </div>
+                    <div class="md:col-span-3 text-right hidden md:flex justify-end gap-3">
+                        <span class="text-[10px] border border-zinc-700 px-3 py-1 rounded-full text-zinc-500 group-hover:border-blue-500 group-hover:text-blue-500 transition-colors">STRATEGY</span>
+                    </div>
+                    <div class="md:col-span-1 text-right flex justify-end">
+                        <div class="exp-indicator text-zinc-600 group-hover:text-white"><i data-lucide="plus" class="w-6 h-6"></i></div>
+                    </div>
+                </div>
+                <div class="exp-details">
+                    <div class="overflow-hidden md:grid md:grid-cols-12 gap-8">
+                        <div class="md:col-start-4 md:col-span-8">
+                            <ul class="text-zinc-400 text-sm space-y-4 max-w-2xl leading-relaxed border-l border-zinc-800 pl-8">
+                                <li><span class="text-white font-bold mr-2">/ 01</span> Developed creative content strategies for blogs, social media, and websites.</li>
+                                <li><span class="text-white font-bold mr-2">/ 02</span> Collaborated with design and marketing teams for integrated campaigns.</li>
+                                <li><span class="text-white font-bold mr-2">/ 03</span> Produced high-performance, SEO-friendly content and monitored analytics.</li>
+                                <li><span class="text-white font-bold mr-2">/ 04</span> Managed client accounts ensuring strategic alignment.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="exp-row border-b border-zinc-800 cursor-pointer group">
+                <div class="py-12 grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
+                    <div class="md:col-span-3 text-[12px] tracking-[0.3em] text-zinc-500 brand-font">JULY 2022 — DEC 2024</div>
+                    <div class="md:col-span-5">
+                        <h3 class="text-4xl md:text-5xl font-bold mb-1 group-hover:text-blue-500 transition-colors duration-500">MARKET-HUB</h3>
+                        <p class="brand-font text-zinc-400 tracking-[0.2em] text-sm">GRAPHIC DESIGNER EXECUTIVE (SEBI REG.)</p>
+                    </div>
+                    <div class="md:col-span-3 text-right hidden md:flex justify-end gap-3">
+                        <span class="text-[10px] border border-zinc-700 px-3 py-1 rounded-full text-zinc-500 group-hover:border-blue-500 group-hover:text-blue-500 transition-colors">3D & GAME DESIGN</span>
+                    </div>
+                    <div class="md:col-span-1 text-right flex justify-end">
+                        <div class="exp-indicator text-zinc-600 group-hover:text-white"><i data-lucide="plus" class="w-6 h-6"></i></div>
+                    </div>
+                </div>
+                <div class="exp-details">
+                    <div class="overflow-hidden md:grid md:grid-cols-12 gap-8">
+                        <div class="md:col-start-4 md:col-span-8">
+                            <ul class="text-zinc-400 text-sm space-y-4 max-w-2xl leading-relaxed border-l border-zinc-800 pl-8">
+                                <li><span class="text-white font-bold mr-2">/ 01</span> Designed creative visuals for digital and print media.</li>
+                                <li><span class="text-white font-bold mr-2">/ 02</span> Developed 3D models and game design concepts for interactive campaigns.</li>
+                                <li><span class="text-white font-bold mr-2">/ 03</span> Partnered with marketing teams to boost brand visibility.</li>
+                                <li><span class="text-white font-bold mr-2">/ 04</span> Maintained brand consistency across diverse creative projects.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="exp-row border-b border-zinc-800 cursor-pointer group">
+                <div class="py-12 grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
+                    <div class="md:col-span-3 text-[12px] tracking-[0.3em] text-zinc-500 brand-font">OCT 2021 — JUNE 2022</div>
+                    <div class="md:col-span-5">
+                        <h3 class="text-4xl md:text-5xl font-bold mb-1 group-hover:text-blue-500 transition-colors duration-500">AD MAGIC</h3>
+                        <p class="brand-font text-zinc-400 tracking-[0.2em] text-sm">SOCIAL MEDIA & CLIENT MANAGEMENT</p>
+                    </div>
+                    <div class="md:col-span-3 text-right hidden md:flex justify-end gap-3">
+                        <span class="text-[10px] border border-zinc-700 px-3 py-1 rounded-full text-zinc-500 group-hover:border-blue-500 group-hover:text-blue-500 transition-colors">PHOTOSHOP</span>
+                    </div>
+                    <div class="md:col-span-1 text-right flex justify-end">
+                        <div class="exp-indicator text-zinc-600 group-hover:text-white"><i data-lucide="plus" class="w-6 h-6"></i></div>
+                    </div>
+                </div>
+                <div class="exp-details">
+                    <div class="overflow-hidden md:grid md:grid-cols-12 gap-8">
+                        <div class="md:col-start-4 md:col-span-8">
+                            <ul class="text-zinc-400 text-sm space-y-4 max-w-2xl leading-relaxed border-l border-zinc-800 pl-8">
+                                <li><span class="text-white font-bold mr-2">/ 01</span> Created visuals using expert Photoshop and Illustrator techniques.</li>
+                                <li><span class="text-white font-bold mr-2">/ 02</span> Managed social media strategies and client relationships.</li>
+                                <li><span class="text-white font-bold mr-2">/ 03</span> Optimized cross-platform content based on analytics.</li>
+                                <li><span class="text-white font-bold mr-2">/ 04</span> Scheduled and managed high-volume post calendars.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="marquee-wrapper">
+        <div class="marquee-content">
+            <span class="marquee-item">BRANDING</span>
+            <span class="marquee-item">MOTION</span>
+            <span class="marquee-item">STRATEGY</span>
+            <span class="marquee-item">IDENTITY</span>
+            <span class="marquee-item">BRANDING</span>
+            <span class="marquee-item">MOTION</span>
+            <span class="marquee-item">STRATEGY</span>
+            <span class="marquee-item">IDENTITY</span>
+        </div>
+    </div>
+
+    <footer id="contact" class="py-40 bg-transparent text-center">
+        <h2 class="text-8xl md:text-[12rem] font-bold tracking-tighter mb-16">MANAV.S</h2>
+        <a href="mailto:manavsheladiya5711@gmail.com" class="text-sm md:text-base tracking-[0.4em] font-bold border-b border-blue-500 pb-2 uppercase">manavsheladiya5711@gmail.com</a>
+    </footer>
+
+    <script>
+        const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789%@&$#";
+        const shelfGrid = document.getElementById('shelfGrid');
+        const viewMoreBtn = document.getElementById('viewMoreBtn');
+        const strategistEl = document.getElementById('strategistText');
+        const originalText = strategistEl.innerText;
+        const sizes = ['size-s', 'size-m', 'size-l', 'size-t'];
+        let glitchTimeout;
+
+        const myProjectImages = [
+            "images/P1.jpg", "images/P2.jpg", "images/P3.jpg", "images/P4.jpg", "images/P5.jpg", 
+            "images/P6.jpg", "images/P7.jpg", "images/P8.jpg", "images/P9.jpg", "images/P10.jpg", 
+            "images/P11.jpg", "images/P12.jpg", "images/P13.jpg", "images/P14.jpg", "images/P15.jpg", 
+            "images/P16.jpg", "images/P17.jpg", "images/P18.jpg", "images/P19.jpg", "images/P20.jpg", 
+            "images/P21.jpg", "images/P22.jpg", "images/P23.jpg", "images/P24.jpg", "images/P25.jpg",
+            "images/P26.jpg", "images/P27.jpg" 
+        ];
+
+        function populateShelf() {
+            myProjectImages.forEach((imgUrl, i) => {
+                const item = document.createElement('div');
+                const randomSize = sizes[Math.floor(Math.random() * sizes.length)];
+                const isInitiallyHidden = i > 7;
+                item.className = `shelf-item ${randomSize} ${isInitiallyHidden ? 'hidden-shard' : ''}`;
+                
+                const img = new Image();
+                img.src = imgUrl;
+                img.alt = `Work ${i + 1}`;
+                img.loading = "lazy";
+                
+                // CRITICAL: REMOVE ITEM IF PATH FAILS
+                img.onerror = () => {
+                    item.remove(); 
+                };
+                
+                item.appendChild(img);
+                shelfGrid.appendChild(item);
+            });
+        }
+        populateShelf();
+
+        viewMoreBtn.addEventListener('click', () => {
+            const hidden = document.querySelectorAll('.hidden-shard');
+            gsap.to(hidden, {
+                display: 'block',
+                opacity: 1,
+                scale: 1,
+                y: 0,
+                duration: 1.2,
+                stagger: 0.08,
+                ease: "expo.out",
+                onStart: () => {
+                    hidden.forEach(el => {
+                        el.classList.remove('hidden-shard');
+                        const img = el.querySelector('img');
+                        gsap.to(img, {
+                            y: "5%", ease: "none",
+                            scrollTrigger: { trigger: el, start: "top bottom", end: "bottom top", scrub: true }
+                        });
+                    });
+                }
+            });
+            viewMoreBtn.style.display = 'none';
+        });
+
+        function restartHomeAnimation() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            clearTimeout(glitchTimeout);
+            const heroName = document.getElementById('heroName');
+            const letterSpans = strategistEl.querySelectorAll('.scramble-letter');
+            gsap.set(heroName, { opacity: 0, y: 20 });
+            gsap.to(heroName, { opacity: 1, y: 0, duration: 1, delay: 0.5, ease: "power4.out" });
+            gsap.fromTo(".hero-reveal", { y: 120, opacity: 0 }, { y: 0, opacity: 1, duration: 1.2, stagger: 0.1, ease: "expo.out" });
+            
+            letterSpans.forEach((span, i) => {
+                let iterations = 0;
+                const maxIterations = 10 + (i * 2);
+                const interval = setInterval(() => {
+                    span.innerText = chars[Math.floor(Math.random() * chars.length)];
+                    iterations++;
+                    if (iterations >= maxIterations) {
+                        clearInterval(interval);
+                        span.innerText = originalText[i];
+                        if (i === originalText.length - 1) { glitchTimeout = setTimeout(randomGlitch, 2500); }
+                    }
+                }, 40);
+            });
+        }
+
+        function randomGlitch() {
+            const letterSpans = strategistEl.querySelectorAll('.scramble-letter');
+            if (letterSpans.length === 0) return;
+            const randomIdx = Math.floor(Math.random() * originalText.length);
+            const targetSpan = letterSpans[randomIdx];
+            const correctLetter = originalText[randomIdx];
+            let ticks = 0;
+            const glitchInterval = setInterval(() => {
+                targetSpan.innerText = chars[Math.floor(Math.random() * chars.length)];
+                ticks++;
+                if(ticks > 12) {
+                    clearInterval(glitchInterval);
+                    targetSpan.innerText = correctLetter;
+                    glitchTimeout = setTimeout(randomGlitch, 2500);
+                }
+            }, 40);
+        }
+
+        function initBgAnimation() {
+            const canvas = document.getElementById('bgCanvas');
+            const ctx = canvas.getContext('2d');
+            let particles = [];
+            let lastScrollY = window.scrollY;
+            function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+            window.addEventListener('resize', resize);
+            resize();
+
+            class Particle {
+                constructor() { this.reset(); }
+                reset() {
+                    this.x = Math.random() * canvas.width;
+                    this.y = Math.random() * canvas.height;
+                    this.size = Math.random() * 1.5 + 0.5;
+                    this.speedX = (Math.random() - 0.5) * 0.4;
+                    this.speedY = (Math.random() - 0.5) * 0.4;
+                    this.opacity = Math.random() * 0.3 + 0.1;
+                }
+                update() {
+                    this.x += this.speedX; this.y += this.speedY;
+                    const scrollDelta = window.scrollY - lastScrollY;
+                    this.y -= scrollDelta * 0.1 * this.size;
+                    if (this.x > canvas.width + 10) this.x = -10;
+                    else if (this.x < -10) this.x = canvas.width + 10;
+                    if (this.y > canvas.height + 10) this.y = -10;
+                    else if (this.y < -10) this.y = canvas.height + 10;
+                }
+                draw() {
+                    ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
+                    ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill();
+                }
+            }
+            for (let i = 0; i < 80; i++) particles.push(new Particle());
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                particles.forEach(p => { p.update(); p.draw(); });
+                lastScrollY = window.scrollY;
+                requestAnimationFrame(animate);
+            }
+            animate();
+        }
+
+        window.onload = () => {
+            gsap.to("#loader", { opacity: 0, duration: 1, onComplete: () => { 
+                document.getElementById('loader').style.display = 'none'; 
+                initAnimations(); 
+                initBgAnimation();
+            }});
+        };
+
+        function initAnimations() {
+            gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
+            lucide.createIcons();
+            strategistEl.innerHTML = originalText.split('').map(l => `<span class="scramble-letter">${l}</span>`).join('');
+            restartHomeAnimation();
+            
+            const cursor = document.getElementById('cursor');
+            let mx = 0, my = 0, cx = 0, cy = 0;
+            document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
+            function moveCursor() { 
+                cx += (mx - cx) * 0.12; cy += (my - cy) * 0.12; 
+                cursor.style.left = `${cx}px`; cursor.style.top = `${cy}px`; 
+                requestAnimationFrame(moveCursor); 
+            }
+            moveCursor();
+            
+            document.querySelectorAll('a, button, .shelf-item, .exp-row').forEach(el => {
+                el.addEventListener('mouseenter', () => { 
+                    cursor.style.width = '80px'; cursor.style.height = '80px'; 
+                    cursor.style.background = 'rgba(255, 255, 255, 0.05)';
+                    cursor.style.border = '1px solid rgba(255, 255, 255, 0.4)';
+                });
+                el.addEventListener('mouseleave', () => { 
+                    cursor.style.width = '20px'; cursor.style.height = '20px'; 
+                    cursor.style.background = 'rgba(255, 255, 255, 0.1)';
+                    cursor.style.border = '1px solid rgba(255, 255, 255, 0.3)';
+                });
+            });
+
+            ScrollTrigger.create({
+                start: 'top -50',
+                onUpdate: (self) => {
+                    const nav = document.getElementById('mainNav');
+                    if (self.direction === 1) {
+                        nav.style.background = 'rgba(5, 5, 5, 0.8)';
+                        nav.style.backdropFilter = 'blur(10px)';
+                    } else {
+                        nav.style.background = 'transparent';
+                        nav.style.backdropFilter = 'none';
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
