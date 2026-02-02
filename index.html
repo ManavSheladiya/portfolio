@@ -68,68 +68,68 @@
         }
         @media (min-width: 1024px) { #cursor { display: block; } }
 
-        /* --- MASONRY SHELF --- */
-        .shelf-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            grid-auto-rows: 200px;
-            grid-auto-flow: dense;
-            gap: 15px;
-            overflow: visible;
+        /* --- DYNAMIC SHELF (Masonry-like) --- */
+        .shelf-container {
+            columns: 2;
+            column-gap: 20px;
+            width: 100%;
         }
 
         @media (min-width: 768px) {
-            .shelf-grid {
-                grid-template-columns: repeat(4, 1fr);
-                grid-auto-rows: 250px;
-                gap: 20px;
+            .shelf-container {
+                columns: 3;
+            }
+        }
+
+        @media (min-width: 1200px) {
+            .shelf-container {
+                columns: 4;
             }
         }
 
         .shelf-item {
+            break-inside: avoid;
+            margin-bottom: 20px;
             position: relative;
-            background: #111;
-            filter: grayscale(100%) brightness(0.6);
+            background: transparent;
+            filter: grayscale(100%) brightness(0.7);
             transition: filter 0.6s ease, transform 0.6s cubic-bezier(0.19, 1, 0.22, 1), opacity 0.6s ease;
             z-index: 1;
             border-radius: 4px;
             overflow: hidden;
             cursor: pointer;
-            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.05);
+            display: inline-block;
+            width: 100%;
         }
 
         .shelf-item.hidden-shard {
             display: none;
             opacity: 0;
-            transform: scale(0.6) translateY(40px);
+            transform: scale(0.9) translateY(20px);
         }
 
-        .shelf-item.size-s { grid-column: span 1; grid-row: span 1; }
-        .shelf-item.size-m { grid-column: span 2; grid-row: span 1; }
-        .shelf-item.size-l { grid-column: span 2; grid-row: span 2; }
-        .shelf-item.size-t { grid-column: span 1; grid-row: span 2; }
-
         .shelf-item img {
-            width: 100%; height: 100%;
-            object-fit: cover;
-            object-position: center;
-            transform: scale(1.01);
-            transition: transform 1.2s cubic-bezier(0.19, 1, 0.22, 1);
+            width: 100%;
+            height: auto;
             display: block;
+            border-radius: 4px;
+            transition: transform 1.2s cubic-bezier(0.19, 1, 0.22, 1);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
         }
 
         .shelf-item:hover {
             filter: grayscale(0%) brightness(1);
             z-index: 50;
-            transform: scale(1.1) !important;
-            box-shadow: 0 30px 60px rgba(0,0,0,0.9);
+            transform: scale(1.03) translateY(-5px) !important;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
         }
 
-        .shelf-item:hover img { transform: scale(1.1); }
+        .shelf-item:hover img { transform: scale(1.05); }
 
-        .shelf-grid:hover .shelf-item:not(:hover) {
-            opacity: 0.2;
-            filter: grayscale(100%) brightness(0.1) blur(3px);
+        /* Less blur and more visibility for others on hover */
+        .shelf-container:hover .shelf-item:not(:hover) {
+            opacity: 0.5;
+            filter: grayscale(100%) brightness(0.4) blur(1px);
         }
 
         /* --- EXPERIENCE ROW --- */
@@ -234,7 +234,7 @@
         <div class="px-6 md:px-12 flex justify-between items-center">
             <div class="flex items-center gap-4">
                 <div class="w-10 h-10 rounded-full border border-white/20 overflow-hidden grayscale hover:grayscale-0 transition-all duration-500">
-                    <img src="images\profile.png" alt="Manav" class="w-full h-full object-cover">
+                    <img src="images\profile.png?auto=format&fit=crop&q=80&w=100" alt="Manav" class="w-full h-full object-cover">
                 </div>
                 <button onclick="restartHomeAnimation()" class="nav-link brand-font text-lg font-bold tracking-[0.3em] text-white outline-none">MANAV SHELADIYA</button>
             </div>
@@ -254,7 +254,7 @@
         </div>
         
         <div class="mb-4 overflow-hidden relative z-10">
-            <p id="heroName" class="text-xs md:text-sm tracking-[0.8em] font-light text-zinc-500 opacity-0 transform translate-y-full">MANAV SHELADIYA</p>
+            <p id="heroName" class="text-xs md:text-2xl tracking-[1.5em] font-light text-zinc-500 opacity-0 transform translate-y-full">MANAV SHELADIYA</p>
         </div>
 
         <div class="z-10 px-6 relative">
@@ -275,9 +275,11 @@
             </div>
         </div>
         
-        <div class="px-6 md:px-12 flex flex-col items-center">
-            <div class="shelf-grid w-full" id="shelfGrid"></div>
-            <button id="viewMoreBtn" class="btn-view-more uppercase">Reveal All Shards</button>
+        <div class="px-6 md:px-12">
+            <div class="shelf-container" id="shelfGrid"></div>
+            <div class="flex justify-center w-full">
+                <button id="viewMoreBtn" class="btn-view-more uppercase">Reveal All Shards</button>
+            </div>
         </div>
     </section>
 
@@ -398,33 +400,32 @@
         const viewMoreBtn = document.getElementById('viewMoreBtn');
         const strategistEl = document.getElementById('strategistText');
         const originalText = strategistEl.innerText;
-        const sizes = ['size-s', 'size-m', 'size-l', 'size-t'];
         let glitchTimeout;
 
+        // CURATED IMAGES WITH VARYING ASPECT RATIOS
         const myProjectImages = [
+           
             "images/P1.jpg", "images/P2.jpg", "images/P3.jpg", "images/P4.jpg", "images/P5.jpg", 
             "images/P6.jpg", "images/P7.jpg", "images/P8.jpg", "images/P9.jpg", "images/P10.jpg", 
             "images/P11.jpg", "images/P12.jpg", "images/P13.jpg", "images/P14.jpg", "images/P15.jpg", 
             "images/P16.jpg", "images/P17.jpg", "images/P18.jpg", "images/P19.jpg", "images/P20.jpg", 
             "images/P21.jpg", "images/P22.jpg", "images/P23.jpg", "images/P24.jpg", "images/P25.jpg",
-            "images/P26.jpg", "images/P27.jpg" 
+            "images/P26.jpg", "images/P27.jpg",  "images/P28.jpg", "images/P29.jpg", "images/P30.jpg"
         ];
 
         function populateShelf() {
             myProjectImages.forEach((imgUrl, i) => {
                 const item = document.createElement('div');
-                const randomSize = sizes[Math.floor(Math.random() * sizes.length)];
                 const isInitiallyHidden = i > 7;
-                item.className = `shelf-item ${randomSize} ${isInitiallyHidden ? 'hidden-shard' : ''}`;
+                item.className = `shelf-item ${isInitiallyHidden ? 'hidden-shard' : ''}`;
                 
                 const img = new Image();
                 img.src = imgUrl;
                 img.alt = `Work ${i + 1}`;
                 img.loading = "lazy";
                 
-                // CRITICAL: REMOVE ITEM IF PATH FAILS
                 img.onerror = () => {
-                    item.remove(); 
+                    item.style.display = 'none'; 
                 };
                 
                 item.appendChild(img);
@@ -436,22 +437,15 @@
         viewMoreBtn.addEventListener('click', () => {
             const hidden = document.querySelectorAll('.hidden-shard');
             gsap.to(hidden, {
-                display: 'block',
+                display: 'inline-block',
                 opacity: 1,
                 scale: 1,
                 y: 0,
-                duration: 1.2,
-                stagger: 0.08,
+                duration: 0.8,
+                stagger: 0.05,
                 ease: "expo.out",
                 onStart: () => {
-                    hidden.forEach(el => {
-                        el.classList.remove('hidden-shard');
-                        const img = el.querySelector('img');
-                        gsap.to(img, {
-                            y: "5%", ease: "none",
-                            scrollTrigger: { trigger: el, start: "top bottom", end: "bottom top", scrub: true }
-                        });
-                    });
+                    hidden.forEach(el => el.classList.remove('hidden-shard'));
                 }
             });
             viewMoreBtn.style.display = 'none';
@@ -483,7 +477,7 @@
 
         function randomGlitch() {
             const letterSpans = strategistEl.querySelectorAll('.scramble-letter');
-            if (letterSpans.length === 0) return;
+            if (!letterSpans || letterSpans.length === 0) return;
             const randomIdx = Math.floor(Math.random() * originalText.length);
             const targetSpan = letterSpans[randomIdx];
             const correctLetter = originalText[randomIdx];
